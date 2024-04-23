@@ -74,14 +74,6 @@ public class Edge extends JComponent {
         return Objects.hash(vertex1, vertex2) + Objects.hash(vertex2, vertex1);
     }
 
-    public Vertex getFirstVertex() {
-        return vertex1;
-    }
-
-    public Vertex getSecondVertex() {
-        return vertex2;
-    }
-
     @Override
     protected void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;

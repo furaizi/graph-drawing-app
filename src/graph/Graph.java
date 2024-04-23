@@ -15,10 +15,10 @@ public class Graph extends JComponent {
 
     private static final int NUMBER_OF_VERTICES = 12;
     private static final double MAX_RANDOM = 2.0;
-    private static final double K = 1.0 - 2*0.02 - 0*0.005 - 0.25;
-    private static final int SEED = 3320;
+    private static final int SEED = 3320; // 3320
     private int[][] directedGraphMatrix;
     private int[][] undirectedGraphMatrix;
+    private double k;
     private ArrayList<Vertex> vertices = new ArrayList<>();
     private HashSet<Edge> undirectedEdges = new HashSet<>();
     private HashSet<Edge> directedEdges = new HashSet<>();
@@ -28,7 +28,19 @@ public class Graph extends JComponent {
 
 
     public Graph() {
+    }
+
+    public Graph(double k) {
+        this.k = k;
         initMatrices();
+        initVertices();
+        initUndirectedEdges();
+        initDirectedEdges();
+    }
+
+    public Graph(int[][] directedGraphMatrix) {
+        this.directedGraphMatrix = directedGraphMatrix;
+        undirectedGraphMatrix = initUndirectedGraphMatrix();
         initVertices();
         initUndirectedEdges();
         initDirectedEdges();
@@ -40,6 +52,9 @@ public class Graph extends JComponent {
 
     public int[][] getUndirectedGraphMatrix() {
         return undirectedGraphMatrix;
+    }
+    public void setVertices(ArrayList<Vertex> vertices) {
+        this.vertices = vertices;
     }
 
     public void switchEdges() {
@@ -68,7 +83,7 @@ public class Graph extends JComponent {
     private void initVertices() {
         GraphStructure graphStructure = new GraphStructure();
 
-        for (int i = 1; i <= NUMBER_OF_VERTICES; i++) {
+        for (int i = 0; i < NUMBER_OF_VERTICES; i++) {
             Point coordinates = graphStructure.getNextPosition();
             vertices.add(new Vertex(i, coordinates.x(), coordinates.y()));
         }
@@ -98,7 +113,7 @@ public class Graph extends JComponent {
 
         for (int i = 0; i < NUMBER_OF_VERTICES; i++) {
             for (int j = 0; j < NUMBER_OF_VERTICES; j++)
-                randomMatrix[i][j] = K * random.nextDouble(MAX_RANDOM);
+                randomMatrix[i][j] = k * random.nextDouble(MAX_RANDOM);
         }
 
         return randomMatrix;

@@ -9,7 +9,7 @@ import java.util.Objects;
 public class Vertex extends JComponent {
 
 
-    public static final int RADIUS = 50;
+    public static final int RADIUS = 25;
     public static final int DIAMETER = 2 * RADIUS;
     public int x;
     public int y;
@@ -38,7 +38,7 @@ public class Vertex extends JComponent {
         g.setColor(Color.BLUE);
         g.drawOval(startPoint.x(), startPoint.y(), DIAMETER, DIAMETER);
 
-        int magicNumber = 3;
+        int magicNumber = 6;
         g.setFont(new Font("Arial", Font.PLAIN, 24));
         g.setColor(Color.BLACK);
         g.drawString(String.valueOf(number), x - magicNumber, y + magicNumber);

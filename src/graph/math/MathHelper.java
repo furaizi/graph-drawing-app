@@ -158,7 +158,8 @@ public class MathHelper {
 
     private static Point calculateTangentPoint(Point p1, Point p2) {
         double distance = distance(p1, p2);
-        double arcAngle = Math.PI/3 - Math.PI/6 * distance/(distance(0,0, WIDTH, HEIGHT)/2);
+        double arcAngle = Math.PI/3 - Math.PI/12 * distance/(distance(0,0, WIDTH, HEIGHT)/2); // pi/6
+//        double arcAngle = Math.PI/2.5;
         double shift = Math.tan(arcAngle) * distance/2;
         double ctrlX, ctrlY;
 
@@ -205,9 +206,9 @@ public class MathHelper {
     }
 
     /**
-    There is no need in this function because of A coefficient is always non-zero,
-    but it should be for the algorithm completeness.
-    */
+     There is no need in this function because of A coefficient is always non-zero,
+     but it should be for the algorithm completeness.
+     */
     private static double solveLinearEquation(double a, double b) {
         return -b/a;
     }
