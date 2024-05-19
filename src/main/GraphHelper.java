@@ -5,9 +5,55 @@ import graph.edges.Edge;
 import graph.vertices.Vertex;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class GraphHelper {
+
+
+    public static Vertex getStartVertex(Graph graph) {
+        var matrix = graph.getDirectedGraphMatrix();
+
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix.length; j++) {
+                if (matrix[i][j] == 1)
+                    return graph.getVertices().get(i);
+            }
+        }
+
+        return graph.getVertices().getFirst();
+    }
+
+    public static int[][] getMatrixFromEdges(ArrayList<Edge> edges, int size) {
+        int[][] matrix = new int[size][size];
+        edges.forEach(edge -> matrix[edge.getVertex1().getNumber()][edge.getVertex2().getNumber()] = 1);
+        return matrix;
+    }
+
+    public static ArrayList<SimpleEdge> graphVerticesToTreeOnes(ArrayList<Edge> edges) {
+        HashSet<Integer> was = new HashSet<>();
+        ArrayList<SimpleEdge> list = new ArrayList<>();
+        int counter = 0;
+        for (var edge : edges) {
+            var vertex1 = edge.getVertex1().getNumber();
+            var vertex2 = edge.getVertex2().getNumber();
+
+            if (!was.contains(vertex1)) {
+                was.add(vertex1);
+                list.add(new SimpleEdge(vertex1, counter++));
+            }
+
+            if (!was.contains(vertex2)) {
+                was.add(vertex2);
+                list.add(new SimpleEdge(vertex2, counter++));
+            }
+        }
+
+        return list;
+    }
+
+
+
+
+
 
     public static HashMap<Integer, Degree> calculateDirectedGraphDegrees(int[][] graphMatrix) {
         HashMap<Integer, Degree> degrees = new HashMap<>();

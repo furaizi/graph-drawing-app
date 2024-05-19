@@ -17,6 +17,8 @@ public class Vertex extends JComponent {
 
     public Point startPoint;
     private int number;
+    private Color fillColor = Color.WHITE;
+    private Color strokeColor = Color.BLUE;
 
     public Vertex(int number, int x, int y) {
         this.number = number;
@@ -32,10 +34,10 @@ public class Vertex extends JComponent {
 
     @Override
     protected void paintComponent(Graphics g) {
-        g.setColor(Color.WHITE);
+        g.setColor(fillColor);
         g.fillOval(startPoint.x(), startPoint.y(), DIAMETER, DIAMETER);
 
-        g.setColor(Color.BLUE);
+        g.setColor(strokeColor);
         g.drawOval(startPoint.x(), startPoint.y(), DIAMETER, DIAMETER);
 
         int magicNumber = 6;
@@ -59,5 +61,9 @@ public class Vertex extends JComponent {
 
     public int getNumber() {
         return number;
+    }
+
+    public void setFillColor(Color fillColor) {
+        this.fillColor = fillColor;
     }
 }

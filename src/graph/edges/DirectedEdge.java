@@ -13,6 +13,7 @@ public class DirectedEdge extends Edge {
 
     private final double arrowTangent = Math.PI/12; // tgx ~ x, x -> 0
     private HashSet<Edge> drawnEdges;
+    private boolean wasMirrored = false;
 
     public DirectedEdge(Vertex vertex1, Vertex vertex2, List<Vertex> vertices, HashSet<Edge> drawnEdges) {
         super(vertex1, vertex2, vertices);
@@ -40,6 +41,7 @@ public class DirectedEdge extends Edge {
     @Override
     protected void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
+        g.setColor(color);
         DirectedEdge complementaryEdge = new DirectedEdge(vertex2, vertex1, vertices, drawnEdges);
 
         if (vertex1.equals(vertex2)) {
@@ -47,15 +49,19 @@ public class DirectedEdge extends Edge {
             drawLoopArrow(g2d);
         }
         else if (drawnEdges.contains(complementaryEdge)) {
-            arcFromVertex1Point = mirrorPoint(arcFromVertex1Point);
-            arcFromVertex2Point = mirrorPoint(arcFromVertex2Point);
-            tangentPoint = mirrorPoint(tangentPoint);
-            arcCenter = mirrorPoint(arcCenter);
+            if (!wasMirrored) {
+                arcFromVertex1Point = mirrorPoint(arcFromVertex1Point);
+                arcFromVertex2Point = mirrorPoint(arcFromVertex2Point);
+                tangentPoint = mirrorPoint(tangentPoint);
+                arcCenter = mirrorPoint(arcCenter);
+
+                wasMirrored = true;
+            }
 
             drawArc(g2d);
             drawArcArrow(g2d);
         }
-        else if (intersectOtherVertices()) {
+        else if (lineIntersectsOtherVertices()) {
             drawArc(g2d);
             drawArcArrow(g2d);
         }

@@ -22,7 +22,7 @@ public class Graph extends JComponent {
     private ArrayList<Vertex> vertices = new ArrayList<>();
     private HashSet<Edge> undirectedEdges = new HashSet<>();
     private HashSet<Edge> directedEdges = new HashSet<>();
-    private HashSet<Edge> currentEdges = undirectedEdges;
+    private HashSet<Edge> currentEdges = directedEdges;
     private HashSet<Edge> drawnEdges = new HashSet<>();
 
 
@@ -44,6 +44,14 @@ public class Graph extends JComponent {
         initVertices();
         initUndirectedEdges();
         initDirectedEdges();
+    }
+
+    public ArrayList<Vertex> getVertices() {
+        return vertices;
+    }
+
+    public HashSet<Edge> getDirectedEdges() {
+        return directedEdges;
     }
 
     public int[][] getDirectedGraphMatrix() {

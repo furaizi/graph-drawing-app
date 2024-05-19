@@ -20,6 +20,8 @@ public class Edge extends JComponent {
     protected Point lineFromVertex1Point;
     protected Point arcFromVertex1Point;
 
+    protected Color color = Color.BLACK;
+
 
     protected Vertex vertex2;
     protected Point lineFromVertex2Point;
@@ -60,6 +62,18 @@ public class Edge extends JComponent {
         paintComponent(g);
     }
 
+    public Vertex getVertex1() {
+        return vertex1;
+    }
+
+    public Vertex getVertex2() {
+        return vertex2;
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -77,10 +91,11 @@ public class Edge extends JComponent {
     @Override
     protected void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
+        g.setColor(color);
 
         if (vertex1.equals(vertex2))
             drawLoop(g2d);
-        else if (intersectOtherVertices())
+        else if (lineIntersectsOtherVertices())
             drawArc(g2d);
         else
             drawLine(g2d);
@@ -116,7 +131,7 @@ public class Edge extends JComponent {
         return circleCoordinate;
     }
 
-    protected boolean intersectOtherVertices() {
+    protected boolean lineIntersectsOtherVertices() {
         for (Vertex vertex : vertices) {
             if (vertex.equals(vertex1) || vertex.equals(vertex2))
                 continue;
