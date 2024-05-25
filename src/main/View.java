@@ -2,17 +2,20 @@ package main;
 
 import graph.*;
 import graph.edges.Edge;
+import graph.edges.WeightedEdge;
 import graph.vertices.Vertex;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static main.GraphHelper.*;
 
 public class View extends JFrame {
 
-    public static final double k = 1.0 - 2*0.001 - 0*0.005 - 0.15;
+    public static final double k = 1.0 - 2*0.01 - 0*0.005 - 0.05;
     public boolean nextStep = false;
     private Graph initialGraph = new Graph(k);
     private JButton switchGraphTypeButton, nextStepButton;
@@ -51,67 +54,116 @@ public class View extends JFrame {
         setVisible(true);
     }
 
+
+
+
     public static void main(String[] args) {
         var view = new View("Graph");
 
-        var BFSTree = view.BFSFast(view.initialGraph);
-        var DFSTree = view.DFSFast(view.initialGraph);
-
-        System.out.println("Directed graph matrix:");
-        printMatrix(view.initialGraph.getDirectedGraphMatrix());
+        System.out.println("Undirected graph matrix:");
+        printMatrix(view.initialGraph.getUndirectedGraphMatrix());
         System.out.println();
 
-        var BFSTreeMatrix = getMatrixFromEdges(BFSTree, view.initialGraph.getVertices().size());
-        System.out.println("BFS traversal tree matrix:");
-        printMatrix(BFSTreeMatrix);
+        System.out.println("Weights matrix:");
+        printMatrix(view.initialGraph.getWeightsMatrix());
         System.out.println();
 
-        var DFSTreeMatrix = getMatrixFromEdges(DFSTree, view.initialGraph.getVertices().size());
-        System.out.println("DFS traversal tree matrix:");
-        printMatrix(DFSTreeMatrix);
-        System.out.println();
-
-        System.out.println("Old vertex -> BFS tree vertex");
-        graphVerticesToTreeOnes(BFSTree).forEach(edge -> System.out.printf("%d -> %d\n", edge.vertex1, edge.vertex2));
-        System.out.println();
-
-        System.out.println("Old vertex -> DFS tree vertex");
-        graphVerticesToTreeOnes(DFSTree).forEach(edge -> System.out.printf("%d -> %d\n", edge.vertex1, edge.vertex2));
-        System.out.println();
-
-        var scanner = new Scanner(System.in);
-        System.out.println("Choose the number:");
-        System.out.println("1. BFS");
-        System.out.println("2. DFS");
-        System.out.println("3. BFS traversal tree");
-        System.out.println("4. DFS traversal tree");
-        System.out.println("\"exit\" to stop program");
-
-        var answer = scanner.nextLine();
-        while(!answer.equals("exit")) {
-            try {
-                Integer.parseInt(answer);
-            }
-            catch (Exception e) {}
-
-            view.clear(view.initialGraph);
-
-            switch (Integer.parseInt(answer)) {
-                case 1 -> view.showBFS(view.initialGraph);
-                case 2 -> view.showDFS(view.initialGraph);
-                case 3 -> {
-                    view.hideAllEdges(view.initialGraph);
-                    view.showKistyak(view.initialGraph, BFSTree);
-                }
-                case 4 -> {
-                    view.hideAllEdges(view.initialGraph);
-                    view.showKistyak(view.initialGraph, DFSTree);
-                }
-            }
-
-            answer = scanner.nextLine();
-        }
+        var MSTGraph = view.kruskalAlgorithm(view.initialGraph);
+        System.out.printf("Total minimum spanning tree weight: %d", getTotalEdgeWeight(MSTGraph));
     }
+
+    private Graph kruskalAlgorithm(Graph graph) {
+        var weightedEdgesIterator = new ArrayList<>(graph.getWeightedUndirectedEdges()
+                .stream()
+                .map(edge -> (WeightedEdge) edge)
+                .sorted()
+                .toList())
+                .iterator();
+        var MSTGraph = new Graph();
+
+        while (weightedEdgesIterator.hasNext()) {
+            var edge = weightedEdgesIterator.next();
+            weightedEdgesIterator.remove();
+            setActive(edge);
+
+            MSTGraph.addEdge(edge);
+            if (hasCycle(MSTGraph))
+                MSTGraph.deleteEdge(edge);
+
+            if (MSTGraph.getWeightedUndirectedEdges().contains(edge))
+                setAddedToMST(edge);
+            else
+                setDefault(edge);
+        }
+
+        return MSTGraph;
+    }
+
+
+    private void setActive(WeightedEdge edge) {
+        edge.getVertex1().setFillColor(Color.RED);
+        edge.getVertex2().setFillColor(Color.RED);
+        edge.setColor(Color.RED);
+        edge.setTextColor(Color.RED);
+        repaint();
+        pause();
+    }
+
+    private void setDefault(WeightedEdge edge) {
+        edge.getVertex1().setFillColor(Color.BLUE);
+        edge.getVertex2().setFillColor(Color.BLUE);
+        edge.setColor(Color.BLACK);
+        edge.setTextColor(Color.BLACK);
+        repaint();
+        pause();
+    }
+
+    private void setAddedToMST(WeightedEdge edge) {
+        edge.getVertex1().setFillColor(Color.BLUE);
+        edge.getVertex2().setFillColor(Color.BLUE);
+        edge.setColor(Color.BLUE);
+        edge.setTextColor(Color.BLUE);
+        repaint();
+        pause();
+    }
+
+    private boolean hasCycle(Graph graph) {
+        for (var vertex : graph.getVertices()) {
+            var visited = new boolean[graph.getVertices().size()];
+            if (newDFS(graph, vertex.getNumber(), -1, visited))
+                return true;
+        }
+
+        return false;
+    }
+
+    private boolean newDFS(Graph graph, int start, int from, boolean[] visited) {
+        visited[start] = true;
+
+        for (var to : getAdjacentVertices(graph.getUndirectedGraphMatrix(), start)) {
+            if (!visited[to]) {
+                if (newDFS(graph, to, start, visited))
+                    return true;
+            }
+            else if (to != from)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static int getTotalEdgeWeight(Graph graph) {
+        return graph.getWeightedUndirectedEdges()
+                .stream()
+                .map(edge -> ((WeightedEdge) edge).getWeight())
+                .reduce(0, Integer::sum);
+    }
+
+
+
+
+
+
 
 
 
@@ -131,121 +183,8 @@ public class View extends JFrame {
         repaint();
     }
 
-    private void showBFS(Graph graph) {
-        int start = getStartVertex(graph).getNumber();
-        boolean[] visited = new boolean[graph.getVertices().size()];
-        LinkedList<Integer> queue = new LinkedList<>();
-
-        visited[start] = true;
-        queue.add(start);
-        var startVertex = graph.getVertices().get(start);
-        setVisited(startVertex);
-        pause();
-
-        while (!queue.isEmpty()) {
-            start = queue.poll();
-            System.out.print(start + " ");
-
-            for (int adj : getAdjacentVertices(graph.getDirectedGraphMatrix(), start)) {
-                var adjVertex = graph.getVertices().get(adj);
-                var adjEdge = getEdge(graph.getDirectedEdges(), start, adj);
-                setActive(adjVertex, adjEdge);
-
-                if (!visited[adj]) {
-                    visited[adj] = true;
-                    queue.add(adj);
-
-                    setVisited(adjVertex);
-                    setEdgeToTree(adjEdge);
-                    pause();
-                }
-                else {
-                    setVisited(adjVertex, adjEdge);
-                }
-            }
-        }
-    }
 
 
-    private void showDFS(Graph graph) {
-        int start = getStartVertex(graph).getNumber();
-        boolean[] visited = new boolean[graph.getVertices().size()];
-        showDFSUtil(graph, start, visited);
-    }
-
-
-    private void showDFSUtil(Graph graph, int start, boolean[] visited) {
-        visited[start] = true;
-
-        var startVertex = graph.getVertices().get(start);
-        setVisited(startVertex);
-        pause();
-
-        System.out.print(start + " ");
-        for (int adj : getAdjacentVertices(graph.getDirectedGraphMatrix(), start)) {
-            var adjVertex = graph.getVertices().get(adj);
-            var adjEdge = getEdge(graph.getDirectedEdges(), start, adj);
-            setActive(adjVertex, adjEdge);
-
-            if (!visited[adj]) {
-                System.out.print("--" + start + "-" + adj + " ");
-                setEdgeToTree(adjEdge);
-                showDFSUtil(graph, adj, visited);
-            }
-            else {
-                setVisited(adjVertex, adjEdge);
-            }
-        }
-    }
-
-    private ArrayList<Edge> BFSFast(Graph graph) {
-        ArrayList<Edge> treeEdges = new ArrayList<>();
-
-        int start = getStartVertex(graph).getNumber();
-        boolean[] visited = new boolean[graph.getVertices().size()];
-        LinkedList<Integer> queue = new LinkedList<>();
-
-        visited[start] = true;
-        queue.add(start);
-
-        while (!queue.isEmpty()) {
-            start = queue.poll();
-            for (int adj : getAdjacentVertices(graph.getDirectedGraphMatrix(), start)) {
-                var adjEdge = getEdge(graph.getDirectedEdges(), start, adj);
-                if (!visited[adj]) {
-                    treeEdges.add(adjEdge);
-                    visited[adj] = true;
-                    queue.add(adj);
-                }
-            }
-        }
-
-        return treeEdges;
-    }
-
-    private ArrayList<Edge> DFSFast(Graph graph) {
-        ArrayList<Edge> treeEdges = new ArrayList<>();
-
-        int start = getStartVertex(graph).getNumber();
-        boolean[] visited = new boolean[graph.getVertices().size()];
-        DFSFastUtil(graph, start, visited, treeEdges);
-
-        return treeEdges;
-    }
-
-
-    private void DFSFastUtil(Graph graph, int start, boolean[] visited, ArrayList<Edge> treeEdges) {
-        visited[start] = true;
-
-        for (int adj : getAdjacentVertices(graph.getDirectedGraphMatrix(), start)) {
-            var adjEdge = getEdge(graph.getDirectedEdges(), start, adj);
-
-            if (!visited[adj]) {
-                treeEdges.add(adjEdge);
-                DFSFastUtil(graph, adj, visited, treeEdges);
-            }
-        }
-    }
 
     private void showKistyak(Graph graph, ArrayList<Edge> kistyakEdges) {
         kistyakEdges.forEach(edge -> {
@@ -332,6 +271,12 @@ public class View extends JFrame {
 
 
     public static void printMatrix(int[][] matrix) {
+        Arrays.stream(matrix)
+                .map(Arrays::toString)
+                .forEach(System.out::println);
+    }
+
+    public static void printMatrix(double[][] matrix) {
         Arrays.stream(matrix)
                 .map(Arrays::toString)
                 .forEach(System.out::println);

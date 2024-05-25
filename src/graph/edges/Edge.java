@@ -70,6 +70,10 @@ public class Edge extends JComponent {
         return vertex2;
     }
 
+    public List<Vertex> getVertices() {
+        return vertices;
+    }
+
     public void setColor(Color color) {
         this.color = color;
     }
