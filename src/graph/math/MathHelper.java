@@ -3,6 +3,7 @@ package graph.math;
 import graph.vertices.Vertex;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class MathHelper {
 
@@ -65,14 +66,34 @@ public class MathHelper {
     }
 
     public static Point shiftPoint(Vertex vertex, double angle) {
-        int x = (int) Math.round( vertex.RADIUS * Math.cos(angle) );
-        int y = (int) Math.round( vertex.RADIUS * -Math.sin(angle) );
+//        int x = (int) Math.round( vertex.RADIUS * Math.cos(angle) );
+//        int y = (int) Math.round( vertex.RADIUS * -Math.sin(angle) );
+//
+//        return new Point(vertex.x + x, vertex.y + y);
+//
+//
+        return shiftPoint(vertex.center, vertex.RADIUS, angle);
+    }
 
-        return new Point(vertex.x + x, vertex.y + y);
+    public static Point shiftPoint(Point center, double radius, double angle) {
+        int x = (int) Math.round( radius * Math.cos(angle) );
+        int y = (int) Math.round( radius * -Math.sin(angle) );
+
+        return new Point(center.x() + x, center.y() + y);
     }
 
     public static long square(long n) {
         return n*n;
+    }
+
+    public static Point rotatePoint(Point center, Point point, double angle) {
+        var xShifted = point.x() - center.x();
+        var yShifted = point.y() - center.y();
+
+        var xRotated = (int) Math.round(xShifted*Math.cos(angle) + yShifted*Math.sin(angle));
+        var yRotated = (int) Math.round(-xShifted*Math.sin(angle) + yShifted*Math.cos(angle));
+
+        return new Point(xRotated, yRotated);
     }
 
 
@@ -206,10 +227,12 @@ public class MathHelper {
     }
 
     /**
-     There is no need in this function because of A coefficient is always non-zero,
-     but it should be for the algorithm completeness.
-     */
+    There is no need in this function because of A coefficient is always non-zero,
+    but it should be for the algorithm completeness.
+    */
     private static double solveLinearEquation(double a, double b) {
         return -b/a;
     }
+
+
 }

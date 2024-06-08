@@ -1,8 +1,9 @@
-package graph;
+package graph.graph;
 
 import graph.edges.DirectedEdge;
 import graph.edges.Edge;
 import graph.edges.WeightedEdge;
+import graph.math.MatrixHelper;
 import graph.math.Point;
 import graph.vertices.Vertex;
 
@@ -16,7 +17,7 @@ public class Graph extends JComponent {
 
     private static final int NUMBER_OF_VERTICES = 12;
     private static final double MAX_RANDOM = 2.0;
-    private static final int SEED = 3320; // 3320
+    private static final int SEED = 3320;
     private int[][] directedGraphMatrix;
     private int[][] undirectedGraphMatrix;
     private int[][] weightsMatrix;
@@ -28,9 +29,8 @@ public class Graph extends JComponent {
     private HashSet<Edge> currentEdges = weightedUndirectedEdges;
     private HashSet<Edge> drawnEdges = new HashSet<>();
 
-
-
     public Graph() {
+        directedGraphMatrix = new int[NUMBER_OF_VERTICES][NUMBER_OF_VERTICES];
         undirectedGraphMatrix = new int[NUMBER_OF_VERTICES][NUMBER_OF_VERTICES];
         weightsMatrix = new int[NUMBER_OF_VERTICES][NUMBER_OF_VERTICES];
         initVertices();
@@ -40,18 +40,23 @@ public class Graph extends JComponent {
         this.k = k;
         initMatrices();
         initVertices();
-        initUndirectedEdges();
-        initDirectedEdges();
-        initWeightedUndirectedEdges();
+        initEdges();
     }
 
     public Graph(int[][] directedGraphMatrix) {
-        this.directedGraphMatrix = directedGraphMatrix;
-        undirectedGraphMatrix = calculateUndirectedGraphMatrix();
+        initMatrices(directedGraphMatrix);
         initVertices();
-        initUndirectedEdges();
-        initDirectedEdges();
-        initWeightedUndirectedEdges();
+        initEdges();
+    }
+
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        drawnEdges.clear();
+        for (var edge : currentEdges)
+            edge.paintComponent(g);
+        for (var vertex : vertices)
+            vertex.paintComponent(g);
     }
 
 
@@ -71,18 +76,18 @@ public class Graph extends JComponent {
 
         var v1 = edge.getVertex1().getNumber();
         var v2 = edge.getVertex2().getNumber();
-        var weight = edge.getWeight();
 
         undirectedGraphMatrix[v1][v2] = undirectedGraphMatrix[v2][v1] = 0;
         weightsMatrix[v1][v2] = weightsMatrix[v2][v1] = 0;
     }
 
 
-
-
-
     public ArrayList<Vertex> getVertices() {
         return vertices;
+    }
+
+    public HashSet<Edge> getUndirectedEdges() {
+        return undirectedEdges;
     }
 
     public HashSet<Edge> getDirectedEdges() {
@@ -116,19 +121,14 @@ public class Graph extends JComponent {
             currentEdges = weightedUndirectedEdges;
     }
 
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        drawnEdges.clear();
-        for (var edge : currentEdges)
-            edge.draw(g);
-        for (var vertex : vertices)
-            vertex.draw(g);
+    private void initMatrices() {
+        directedGraphMatrix = calculateDirectedGraphMatrix();
+        undirectedGraphMatrix = calculateUndirectedGraphMatrix();
+        weightsMatrix = calculateWeightsMatrix();
     }
 
-    private void initMatrices() {
-        double[][] randomNumbersMatrix = getRandomMatrix();
-        directedGraphMatrix = castMatrix(randomNumbersMatrix);
+    private void initMatrices(int[][] directedGraphMatrix) {
+        this.directedGraphMatrix = directedGraphMatrix;
         undirectedGraphMatrix = calculateUndirectedGraphMatrix();
         weightsMatrix = calculateWeightsMatrix();
     }
@@ -142,64 +142,16 @@ public class Graph extends JComponent {
         }
     }
 
-    private void initUndirectedEdges() {
-        for (int i = 0; i < NUMBER_OF_VERTICES; i++) {
-            for (int j = 0; j < NUMBER_OF_VERTICES; j++) {
-                if (undirectedGraphMatrix[i][j] == 1)
-                    undirectedEdges.add(new Edge(vertices.get(i), vertices.get(j), vertices));
-            }
-        }
+    private void initEdges() {
+        initUndirectedEdges();
+        initDirectedEdges();
+        initWeightedUndirectedEdges();
     }
 
-    private void initDirectedEdges() {
-        for (int i = 0; i < NUMBER_OF_VERTICES; i++) {
-            for (int j = 0; j < NUMBER_OF_VERTICES; j++) {
-                if (directedGraphMatrix[i][j] == 1)
-                    directedEdges.add(new DirectedEdge(vertices.get(i), vertices.get(j), vertices, drawnEdges));
-            }
-        }
-    }
 
-    private void initWeightedUndirectedEdges() {
-        for (int i = 0; i < NUMBER_OF_VERTICES; i++) {
-            for (int j = 0; j < NUMBER_OF_VERTICES; j++) {
-                if (undirectedGraphMatrix[i][j] == 1)
-                    weightedUndirectedEdges.add(new WeightedEdge(vertices.get(i), vertices.get(j), weightsMatrix[i][j], vertices));
-            }
-        }
 
-    }
-
-    private double[][] getRandomMatrix() {
-        Random random = new Random(SEED);
-        double[][] randomMatrix = new double[NUMBER_OF_VERTICES][NUMBER_OF_VERTICES];
-
-        for (int i = 0; i < NUMBER_OF_VERTICES; i++) {
-            for (int j = 0; j < NUMBER_OF_VERTICES; j++)
-                randomMatrix[i][j] = k * random.nextDouble(MAX_RANDOM);
-        }
-
-        return randomMatrix;
-    }
-
-    private int[][] initUpperTriangularMatrix() {
-        int[][] tr = new int[NUMBER_OF_VERTICES][NUMBER_OF_VERTICES];
-        for (int i = 0; i < tr.length; i++) {
-            for (int j = 0; j < tr.length; j++)
-                tr[i][j] = i < j ? 1 : 0;
-        }
-
-        return tr;
-    }
-
-    private int[][] castMatrix(double[][] matrix) {
-        int[][] castedMatrix = new int[matrix.length][matrix.length];
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix.length; j++)
-                castedMatrix[i][j] = (int) matrix[i][j];
-        }
-
-        return castedMatrix;
+    private int[][] calculateDirectedGraphMatrix() {
+        return MatrixHelper.booleanTransform(getRandomMatrix());
     }
 
     private int[][] calculateUndirectedGraphMatrix() {
@@ -234,7 +186,7 @@ public class Graph extends JComponent {
                 H[i][j] = D[i][j] != D[j][i] ? 1 : 0;
         }
 
-        int[][] tr = initUpperTriangularMatrix();
+        int[][] tr = MatrixHelper.upperTriangularMatrix(NUMBER_OF_VERTICES);
         int[][] W = new int[B.length][B.length];
 
         for (int i = 0; i < W.length; i++) {
@@ -246,5 +198,46 @@ public class Graph extends JComponent {
         }
 
         return W;
+    }
+
+    private void initUndirectedEdges() {
+        for (int i = 0; i < NUMBER_OF_VERTICES; i++) {
+            for (int j = 0; j < NUMBER_OF_VERTICES; j++) {
+                if (undirectedGraphMatrix[i][j] == 1)
+                    undirectedEdges.add(new Edge(vertices.get(i), vertices.get(j), vertices));
+            }
+        }
+    }
+
+    private void initDirectedEdges() {
+        for (int i = 0; i < NUMBER_OF_VERTICES; i++) {
+            for (int j = 0; j < NUMBER_OF_VERTICES; j++) {
+                if (directedGraphMatrix[i][j] == 1)
+                    directedEdges.add(new DirectedEdge(vertices.get(i), vertices.get(j), vertices, drawnEdges));
+            }
+        }
+    }
+
+    private void initWeightedUndirectedEdges() {
+        for (int i = 0; i < NUMBER_OF_VERTICES; i++) {
+            for (int j = 0; j < NUMBER_OF_VERTICES; j++) {
+                if (undirectedGraphMatrix[i][j] == 1)
+                    weightedUndirectedEdges.add(new WeightedEdge(vertices.get(i), vertices.get(j), weightsMatrix[i][j], vertices));
+            }
+        }
+
+    }
+
+
+    private double[][] getRandomMatrix() {
+        Random random = new Random(SEED);
+        double[][] randomMatrix = new double[NUMBER_OF_VERTICES][NUMBER_OF_VERTICES];
+
+        for (int i = 0; i < NUMBER_OF_VERTICES; i++) {
+            for (int j = 0; j < NUMBER_OF_VERTICES; j++)
+                randomMatrix[i][j] = k * random.nextDouble(MAX_RANDOM);
+        }
+
+        return randomMatrix;
     }
 }

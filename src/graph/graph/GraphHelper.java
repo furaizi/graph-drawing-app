@@ -1,13 +1,13 @@
-package main;
+package graph.graph;
 
-import graph.Graph;
 import graph.edges.Edge;
+import graph.edges.WeightedEdge;
 import graph.vertices.Vertex;
+import static graph.math.MatrixHelper.*;
 
 import java.util.*;
 
 public class GraphHelper {
-
 
     public static Vertex getStartVertex(Graph graph) {
         var matrix = graph.getDirectedGraphMatrix();
@@ -49,10 +49,6 @@ public class GraphHelper {
 
         return list;
     }
-
-
-
-
 
 
     public static HashMap<Integer, Degree> calculateDirectedGraphDegrees(int[][] graphMatrix) {
@@ -124,9 +120,9 @@ public class GraphHelper {
     }
 
     public static ArrayList<SimpleEdge> allPathsWithLength2and3(int[][] graphMatrix) {
-        int[][] graphMatrixSquared = multiplyMatrix(graphMatrix, graphMatrix);
-        int[][] graphMatrixCubed = multiplyMatrix(graphMatrixSquared, graphMatrix);
-        int[][] allPathsWithLength2and3Matrix = unionMatrices(graphMatrixSquared, graphMatrixCubed);
+        int[][] graphMatrixSquared = multiply(graphMatrix, graphMatrix);
+        int[][] graphMatrixCubed = multiply(graphMatrixSquared, graphMatrix);
+        int[][] allPathsWithLength2and3Matrix = union(graphMatrixSquared, graphMatrixCubed);
 
         ArrayList<SimpleEdge> allPathsWithLength2and3List = new ArrayList<>();
         for (int i = 0; i < graphMatrix.length; i++) {
@@ -140,7 +136,7 @@ public class GraphHelper {
     }
 
     public static ArrayList<ArrayList<Integer>> allPathsWithLength2(int[][] graphMatrix) {
-        int[][] graphMatrixSquared = powMatrix(graphMatrix, 2);
+        int[][] graphMatrixSquared = pow(graphMatrix, 2);
         ArrayList<ArrayList<Integer>> paths = new ArrayList<>();
 
         for (int i = 0; i < graphMatrix.length; i++) {
@@ -190,13 +186,13 @@ public class GraphHelper {
 
     public static int[][] calculateReachabilityMatrix(int[][] graphMatrix) {
 //        return unionMatrices(transitiveClosure(graphMatrix), getIdentityMatrix(graphMatrix.length));
-        return unionMatrices(nonEfficientTransitiveClosure(graphMatrix), getIdentityMatrix(graphMatrix.length));
+        return union(nonEfficientTransitiveClosure(graphMatrix), identityMatrix(graphMatrix.length));
     }
 
     public static int[][] calculateMatrixOfStrongConnectivity(int[][] graphMatrix) {
         int[][] reachabilityMatrix = calculateReachabilityMatrix(graphMatrix);
 
-        return unionMatrices(reachabilityMatrix, transposeMatrix(reachabilityMatrix));
+        return union(reachabilityMatrix, transpose(reachabilityMatrix));
     }
 
     public static ArrayList<ArrayList<Integer>> listOfStronglyConnectedComponents(int[][] strongConnectivity) {
@@ -264,111 +260,21 @@ public class GraphHelper {
         return new Graph(condensation);
     }
 
-
-
-
-
-
-    private static int[][] powMatrix(int[][] matrix, int power) {
-        int[][] result = matrix;
-        for (int i = 2; i <= power; i++)
-            result = multiplyMatrix(result, matrix);
-
-        return result;
-    }
-
-    private static int[][] multiplyMatrix(int[][] a, int[][] b) {
-        int len = a.length;
-        int[][] result = new int[len][len];
-        int accumulator = 0;
-
-        for (int y = 0; y < len; y++) {
-            for (int x = 0; x < len; x++) {
-                for (int z = 0; z < len; z++)
-                    accumulator += a[y][z] * b[z][x];
-
-                result[y][x] = accumulator;
-                accumulator = 0;
-            }
+    public static ArrayList<Integer> getAdjacentVertices(int[][] graphMatrix, int vertex) {
+        ArrayList<Integer> list = new ArrayList<>();
+        for (int i = 0; i < graphMatrix.length; i++) {
+            if (graphMatrix[vertex][i] == 1)
+                list.add(i);
         }
 
-        return result;
+        return list;
     }
 
-    private static int[][] unionMatrices(int[][] a, int[][] b) {
-        int len = a.length;
-        int[][] result = new int[len][len];
-
-        for (int i = 0; i < len; i++) {
-            for (int j = 0; j < len; j++)
-                result[i][j] = a[i][j] + b[i][j];
-        }
-
-        return booleanTransform(result);
-    }
-
-    private static int[][] booleanTransform(int[][] matrix) {
-        int[][] newMatrix = new int[matrix.length][matrix.length];
-
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix.length; j++) {
-                newMatrix[i][j] = matrix[i][j] >= 1 ? 1 : 0;
-            }
-        }
-
-        return newMatrix;
-    }
-
-    private static int[][] transitiveClosure(int[][] relationMatrix) {
-        int len = relationMatrix.length;
-        int[][] closure = new int[len][len];
-
-        for (int k = 0; k < len; k++) {
-            for (int i = 0; i < len; i++) {
-                for (int j = 0; j < len; j++) {
-                    closure[i][j] = relationMatrix[i][j] | (relationMatrix[i][k] & relationMatrix[k][j]);
-                }
-            }
-        }
-
-        return closure;
-    }
-
-    private static int[][] nonEfficientTransitiveClosure(int[][] relationMatrix) {
-        int len = relationMatrix.length;
-        int[][] transitiveClosure = getIdentityMatrix(len);
-        int[][] powMatrix = new int[len][];
-
-        for (int i = 0; i < len; i++)
-            powMatrix[i] = Arrays.copyOf(relationMatrix[i], len);
-        transitiveClosure = unionMatrices(transitiveClosure, powMatrix);
-
-        for (int i = 2; i < len; i++) {
-            powMatrix = multiplyMatrix(powMatrix, relationMatrix);
-            transitiveClosure = unionMatrices(transitiveClosure, powMatrix);
-        }
-
-        return transitiveClosure;
-    }
-
-    private static int[][] getIdentityMatrix(int size) {
-        int[][] identityMatrix = new int[size][size];
-        for (int i = 0; i < size; i++)
-            identityMatrix[i][i] = 1;
-
-        return identityMatrix;
-    }
-
-    private static int[][] transposeMatrix(int[][] matrix) {
-        int len = matrix.length;
-        int[][] transposed = new int[len][len];
-
-        for (int i = 0; i < len; i++) {
-            for (int j = 0; j < len; j++)
-                transposed[i][j] = matrix[j][i];
-        }
-
-        return transposed;
+    public static int getTotalEdgeWeight(Graph graph) {
+        return graph.getWeightedUndirectedEdges()
+                .stream()
+                .map(edge -> ((WeightedEdge) edge).getWeight())
+                .reduce(0, Integer::sum);
     }
 
 

@@ -1,4 +1,4 @@
-package graph;
+package graph.graph;
 
 import graph.math.Point;
 

@@ -28,12 +28,8 @@ public class Vertex extends JComponent {
         this.startPoint = new Point(x - RADIUS, y - RADIUS);
     }
 
-    public void draw(Graphics g) {
-        paintComponent(g);
-    }
-
     @Override
-    protected void paintComponent(Graphics g) {
+    public void paintComponent(Graphics g) {
         g.setColor(fillColor);
         g.fillOval(startPoint.x(), startPoint.y(), DIAMETER, DIAMETER);
 
